@@ -3,7 +3,7 @@
 Detailed guide for authoring specs in this repo. Read this when you are
 drafting or reviewing a spec; you do not need it for routine tasks. The
 core workflow (spec → plan → implement → verify → ship), folder
-conventions, lifecycle, and Definition of Done live in `CLAUDE.md`.
+conventions, lifecycle, and Definition of Done live in `AGENTS.md`.
 
 A copy of `specs/TEMPLATE.md` is the recommended starting point.
 
