@@ -51,6 +51,9 @@ because the code looks right — it is done when the agreed spec is met.
 spec (WHAT/WHY)  →  plan (HOW)  →  implement  →  verify against spec  →  ship
 ```
 
+The skills in `.agents/skills/` automate these steps:
+`draft-spec` → `brainstorm-spec` → `execute-spec` → `verify-spec`.
+
 1. **Write the spec first.** Before any code, capture the problem, goals,
    requirements, and acceptance criteria. No spec = no code.
 2. **Review the spec.** A spec is cheap to change; code is expensive. Get

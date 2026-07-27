@@ -14,7 +14,7 @@ keeps an autonomous agent building *the right thing* rather than a
 plausible-looking thing. Write them to minimize ambiguity.
 
 - **Describe behavior, not implementation.** Say what the system must do
-  and why, not how to code it. "Persist games between sessions" is a
+  and why, not how to code it. "Persist user data between sessions" is a
   requirement; "use SQLite" is a decision that belongs in the plan.
 - **One concern per spec.** If a spec covers two unrelated features, split
   it. Small specs are easier to review, implement, and verify.

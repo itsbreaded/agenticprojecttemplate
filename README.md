@@ -19,6 +19,7 @@ you a lightweight structure for capturing intent before code is written:
 - **`docs/`** — on-demand technical documentation that is deliberately *not*
   frontloaded into agent context. Agents read a doc only when a task needs it.
 - **`.agents/skills/`** — project-local skills that automate the workflow:
+  - `draft-spec` — research an idea into a pending spec draft.
   - `brainstorm-spec` — flesh out a draft spec until it's ready for handoff.
   - `execute-spec` — implement a ready spec one piece at a time.
   - `verify-spec` — verify an implementation against its spec.
@@ -30,6 +31,9 @@ you a lightweight structure for capturing intent before code is written:
 ```
 spec (WHAT/WHY)  →  plan (HOW)  →  implement  →  verify against spec  →  ship
 ```
+
+Four skills in `.agents/skills/` automate this flow:
+`draft-spec` → `brainstorm-spec` → `execute-spec` → `verify-spec`.
 
 1. **Write the spec first.** No spec = no code.
 2. **Review the spec.** A spec is cheap to change; code is expensive.
@@ -49,9 +53,11 @@ spec (WHAT/WHY)  →  plan (HOW)  →  implement  →  verify against spec  → 
    ```
 2. **Edit `AGENTS.md`** — replace `<Project>` with your project name and
    description, then fill in the Quick start section once you've chosen a stack.
-3. **Start a feature** — copy `specs/TEMPLATE.md` into `specs/pending/` and
-   name it with the next unused three-digit number and a kebab-case slug
-   (e.g. `001-add-auth.md`). See `docs/writing-specs.md` for spec principles.
+3. **Start a feature** — run `/draft-spec <your idea>` to research and draft
+   a spec; it creates `specs/pending/<number>-<slug>.md` from `TEMPLATE.md`
+   for you. (Or copy `specs/TEMPLATE.md` manually, naming it with the next
+   unused three-digit number and a kebab-case slug, e.g. `001-add-auth.md`.)
+   See `docs/writing-specs.md` for spec principles.
 4. **Link skills to your agent** — run the `link-claude-skills` skill. It
    aliases `.claude/skills` to canonical `.agents/skills` and creates a
    `CLAUDE.md` pointer to `AGENTS.md` so Claude Code and Codex share one
@@ -71,6 +77,7 @@ details.
 ```
 .
 ├── AGENTS.md              # Canonical agent instructions (read by Claude Code & Codex)
+├── README.md              # This overview
 ├── docs/                  # On-demand technical docs (not frontloaded into context)
 │   ├── README.md
 │   └── writing-specs.md
@@ -78,12 +85,16 @@ details.
 │   ├── TEMPLATE.md        # Copy this to start a new spec
 │   ├── pending/           # Specs not yet shipped
 │   └── done/              # Shipped specs
-└── .agents/skills/        # Project-local agent skills
-    ├── brainstorm-spec/
-    ├── execute-spec/
-    ├── verify-spec/
-    └── link-claude-skills/
+└── .agents/skills/        # Project-local agent skills (one folder per skill)
+    ├── brainstorm-spec/   #   refine a draft spec until it's ready
+    ├── draft-spec/        #   research an idea into a pending spec draft
+    ├── execute-spec/      #   implement a ready spec one piece at a time
+    ├── verify-spec/       #   verify an implementation against its spec
+    └── link-claude-skills/#   share one skill source across Claude Code & Codex
 ```
+
+Each skill folder holds a `SKILL.md`. Skills exposed as Codex agents also
+carry an `agents/openai.yaml` interface file alongside it.
 
 ## License
 
