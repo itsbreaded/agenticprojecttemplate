@@ -33,16 +33,41 @@ their behavior. Their gates are the contract:
   - `only <slug>` — process exactly one spec, still through all three phases.
 - Do not infer a stopping point from silence. The default is "all pending."
 
+## Execution continuity (mandatory)
+
+This is a long-running workflow. A progress update is **not** a terminal
+condition. Keep working in the same active turn after every successful tool
+call, phase transition, test result, checkpoint update, or archived spec.
+
+- Send concise progress updates only in the commentary/intermediate channel;
+  never use a final response to report partial implementation, a passing
+  check, or a resumable checkpoint.
+- Emit a final response only after one of the terminal conditions below:
+  every queued spec is archived; the invocation's declared stopping point is
+  reached; a Safety halt occurs; or a retry/attempt/overall cap requires a
+  stop.
+- Before emitting a final response, mechanically inspect `specs/pending/`,
+  the checkpoint, and the active spec status. If any queued spec is still
+  `draft`, `ready`, `in-progress`, or `review` without a recorded terminal
+  blocker, continue the loop.
+- When the Codex surface provides Goal mode or a goal/continuation mechanism,
+  use it for this invocation with the outcome “archive all pending specs” and
+  the phase gates as completion criteria. Goal mode keeps long-running work
+  active; this skill still owns the queue and safety rules.
+- If the hosting surface ends a turn outside the agent's control, the next
+  invocation MUST read the checkpoint and resume immediately. Do not describe
+  the prior partial run as completed.
+
 ## Hard limits (prevent infinite loops)
 
 Unbounded feedback paths are the root cause of infinite agentic loops, so
 the orchestrator carries its own budgets, independent of phase budgets:
 
-- **Per-spec attempt cap**: at most 2 full passes through the three phases
+- **Per-spec attempt cap**: at most 5 full passes through the three phases
   per spec. Still not archived after that -> stop on that spec, report.
-- **Per-phase retry cap**: if a phase exits twice in a row without advancing
-  status for the same blocker, do not retry it a third time -> stop, report.
-- **Overall cap**: stop after 5 consecutive specs fail to advance, or when a
+- **Per-phase retry cap**: if a phase exits three times in a row without
+  advancing status for the same blocker, do not retry it a fourth time -> stop, report.
+- **Overall cap**: stop after 8 consecutive specs fail to advance, or when a
   phase requests an action in the **Safety halt** set.
 - A phase that genuinely cannot advance is a stopping point, not a reason to
   retry harder. Prefer reporting over looping.

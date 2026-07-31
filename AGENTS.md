@@ -53,6 +53,8 @@ spec (WHAT/WHY)  →  plan (HOW)  →  implement  →  verify against spec  → 
 
 The skills in `.agents/skills/` automate these steps:
 `draft-spec` → `brainstorm-spec` → `execute-spec` → `verify-spec`.
+The `auto-orchestrator-spec` skill composes the phase skills for unattended
+queue processing, with bounded retries and an ignored resume checkpoint.
 
 1. **Write the spec first.** Before any code, capture the problem, goals,
    requirements, and acceptance criteria. No spec = no code.
@@ -64,6 +66,12 @@ The skills in `.agents/skills/` automate these steps:
 4. **Verify against the spec.** Implementation is complete only when every
    requirement and acceptance scenario is demonstrably met.
 5. **Archive.** Move the spec from `pending/` to `done/` once shipped.
+
+For long-running unattended work, use `/auto-orchestrator-spec`. It keeps
+working through the pending queue until all specs are archived or a declared
+stopping point or safety limit is reached. Its checkpoint at
+`specs/.auto-orchestrator-state.md` is only a resume hint; each spec's
+`Status:` line remains authoritative.
 
 ### Spec folders
 

@@ -15,3 +15,10 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local Claude Code alias to canonical .agents/skills (junction/symlink,
+# not portable through Git — created locally by the link-claude-skills skill)
+.claude/
+
+# Transient state for an interrupted auto-orchestrator-spec run
+specs/.auto-orchestrator-state.md

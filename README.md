@@ -23,6 +23,8 @@ you a lightweight structure for capturing intent before code is written:
   - `brainstorm-spec` — flesh out a draft spec until it's ready for handoff.
   - `execute-spec` — implement a ready spec one piece at a time.
   - `verify-spec` — verify an implementation against its spec.
+  - `auto-orchestrator-spec` — process the pending queue through all phases
+    with bounded retries and an ignored resume checkpoint.
   - `link-claude-skills` — share one skill source between Claude Code and
     Codex, and keep `CLAUDE.md` a thin pointer to canonical `AGENTS.md`.
 
@@ -32,8 +34,11 @@ you a lightweight structure for capturing intent before code is written:
 spec (WHAT/WHY)  →  plan (HOW)  →  implement  →  verify against spec  →  ship
 ```
 
-Four skills in `.agents/skills/` automate this flow:
+The phase skills in `.agents/skills/` automate this flow:
 `draft-spec` → `brainstorm-spec` → `execute-spec` → `verify-spec`.
+For unattended queue processing, run `/auto-orchestrator-spec`; it resumes
+from `specs/.auto-orchestrator-state.md` when available, while each spec's
+`Status:` line remains the source of truth.
 
 1. **Write the spec first.** No spec = no code.
 2. **Review the spec.** A spec is cheap to change; code is expensive.
@@ -90,6 +95,7 @@ details.
     ├── draft-spec/        #   research an idea into a pending spec draft
     ├── execute-spec/      #   implement a ready spec one piece at a time
     ├── verify-spec/       #   verify an implementation against its spec
+    ├── auto-orchestrator-spec/ # process pending specs with bounded resume
     └── link-claude-skills/#   share one skill source across Claude Code & Codex
 ```
 
