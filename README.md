@@ -1,106 +1,93 @@
 # Agentic Project Template
 
-A starter repository for building software with AI coding agents —
-Claude Code, Codex, and similar tools — using **spec-driven development**.
-Drop in your stack and start features from a spec instead of a vague prompt,
-so agents build *the right thing* rather than a plausible-looking thing.
+A starter repository for building software with AI coding agents using
+spec-driven development. Drop in your stack and start features from a spec
+instead of a vague prompt, so agents build the intended behavior.
 
 ## Why
 
-AI agents are most useful when the intent is unambiguous. This template gives
-you a lightweight structure for capturing intent before code is written:
+This template provides a lightweight structure for capturing intent before
+code is written:
 
-- **`AGENTS.md`** — the single canonical instructions file. Both Claude Code
-  and Codex read it. It documents the project, a docs index, a quick start,
-  and the spec-driven workflow.
-- **`specs/`** — one Markdown file per feature. A spec describes the *what*
-  and *why* (problem, goals, verifiable requirements, acceptance scenarios,
-  non-goals), not the *how*. Specs move `pending/` → `done/` as they ship.
-- **`docs/`** — on-demand technical documentation that is deliberately *not*
-  frontloaded into agent context. Agents read a doc only when a task needs it.
-- **`.agents/skills/`** — project-local skills that automate the workflow:
-  - `draft-spec` — research an idea into a pending spec draft.
-  - `brainstorm-spec` — flesh out a draft spec until it's ready for handoff.
-  - `execute-spec` — implement a ready spec one piece at a time.
-  - `verify-spec` — verify an implementation against its spec.
-  - `auto-orchestrator-spec` — process the pending queue through all phases
-    with bounded retries and an ignored resume checkpoint.
-  - `link-claude-skills` — share one skill source between Claude Code and
-    Codex, and keep `CLAUDE.md` a thin pointer to canonical `AGENTS.md`.
+- **AGENTS.md** is the canonical project instruction file.
+- **specs/** holds one behavioral contract per feature.
+- **docs/** holds focused, on-demand technical documentation.
+- **.agents/skills/** holds the workflow skills shared by Codex and Claude
+  Code.
 
-## The workflow
+The workflow skills are:
 
+- `draft-spec` - research an idea into a pending spec draft.
+- `brainstorm-spec` - refine a draft until its requirements are ready.
+- `plan-spec` - write a detailed implementation plan.
+- `review-plan` - independently review and approve the plan.
+- `execute-spec` - implement from the approved plan.
+- `verify-spec` - verify the implementation and archive passing work.
+- `auto-orchestrator-spec` - process the pending queue with bounded retries.
+- `link-claude-skills` - share one canonical skill source between Claude Code
+  and Codex.
+
+## Workflow
+
+```text
+draft -> brainstorm -> plan -> review-plan -> execute -> verify -> archive
 ```
-spec (WHAT/WHY)  →  plan (HOW)  →  implement  →  verify against spec  →  ship
-```
 
-The phase skills in `.agents/skills/` automate this flow:
-`draft-spec` → `brainstorm-spec` → `execute-spec` → `verify-spec`.
-For unattended queue processing, run `/auto-orchestrator-spec`; it resumes
-from `specs/.auto-orchestrator-state.md` when available, while each spec's
-`Status:` line remains the source of truth.
+Execution requires an adjacent plan with `Plan Status: approved`. The
+auto-orchestrator follows the same gates and keeps a transient checkpoint at
+`specs/.auto-orchestrator-state.md`.
 
-1. **Write the spec first.** No spec = no code.
-2. **Review the spec.** A spec is cheap to change; code is expensive.
-3. **Plan, then implement.** Implementation details live in the plan/PR.
-4. **Verify against the spec.** Done means every requirement and acceptance
-   scenario is demonstrably met.
-5. **Archive.** Move the spec from `specs/pending/` to `specs/done/`.
+1. Write the spec first. No spec means no code.
+2. Refine the WHAT/WHY until requirements and scenarios are verifiable.
+3. Create and independently review the repository-specific HOW plan.
+4. Implement only from the approved plan.
+5. Verify every requirement and scenario with concrete evidence.
+6. Move the passing spec and plan from `pending/` to `done/`.
 
 ## Quick start
 
-1. **Use this template** — click GitHub's *Use this template* button, or
-   clone and re-point the remote:
-   ```sh
-   git clone https://github.com/itsbreaded/agenticprojecttemplate.git my-project
-   cd my-project
-   git remote set-url origin <your-repo-url>
-   ```
-2. **Edit `AGENTS.md`** — replace `<Project>` with your project name and
-   description, then fill in the Quick start section once you've chosen a stack.
-3. **Start a feature** — run `/draft-spec <your idea>` to research and draft
-   a spec; it creates `specs/pending/<number>-<slug>.md` from `TEMPLATE.md`
-   for you. (Or copy `specs/TEMPLATE.md` manually, naming it with the next
-   unused three-digit number and a kebab-case slug, e.g. `001-add-auth.md`.)
-   See `docs/writing-specs.md` for spec principles.
-4. **Link skills to your agent** — run the `link-claude-skills` skill. It
-   aliases `.claude/skills` to canonical `.agents/skills` and creates a
-   `CLAUDE.md` pointer to `AGENTS.md` so Claude Code and Codex share one
-   source of truth.
+1. Use this template or clone it into a new project.
+2. Edit `AGENTS.md`: replace `<Project>`, describe the stack, and fill in
+   Quick start and project guardrails.
+3. Start a feature with `/draft-spec <your idea>`.
+4. Link skills with `/link-claude-skills` when Claude Code is part of the
+   workflow.
 
 ## Requirements
 
-- [Git](https://git-scm.com/)
-- An AI coding agent that reads `AGENTS.md` (Claude Code, Codex, etc.)
+- Git
+- An AI coding agent that reads `AGENTS.md`
 
-Skills are plain Markdown — no runtime or package install is needed to read
-them. Specific skills may invoke shell commands; see each `SKILL.md` for
-details.
+Skills are plain Markdown; no package installation is required to read them.
+Individual skills may invoke commands from the project stack.
 
 ## Repository layout
 
-```
+```text
 .
-├── AGENTS.md              # Canonical agent instructions (read by Claude Code & Codex)
-├── README.md              # This overview
-├── docs/                  # On-demand technical docs (not frontloaded into context)
-│   ├── README.md
-│   └── writing-specs.md
-├── specs/                 # Spec-driven development
-│   ├── TEMPLATE.md        # Copy this to start a new spec
-│   ├── pending/           # Specs not yet shipped
-│   └── done/              # Shipped specs
-└── .agents/skills/        # Project-local agent skills (one folder per skill)
-    ├── brainstorm-spec/   #   refine a draft spec until it's ready
-    ├── draft-spec/        #   research an idea into a pending spec draft
-    ├── execute-spec/      #   implement a ready spec one piece at a time
-    ├── verify-spec/       #   verify an implementation against its spec
-    ├── auto-orchestrator-spec/ # process pending specs with bounded resume
-    └── link-claude-skills/#   share one skill source across Claude Code & Codex
+|-- AGENTS.md
+|-- README.md
+|-- docs/
+|   |-- README.md
+|   |-- writing-specs.md
+|   `-- writing-plans.md
+|-- specs/
+|   |-- TEMPLATE.md
+|   |-- pending/
+|   `-- done/
+`-- .agents/skills/
+    |-- brainstorm-spec/
+    |-- draft-spec/
+    |-- plan-spec/
+    |-- review-plan/
+    |-- execute-spec/
+    |-- verify-spec/
+    |-- auto-orchestrator-spec/
+    `-- link-claude-skills/
 ```
 
-Each skill folder holds a `SKILL.md`. Skills exposed as Codex agents also
-carry an `agents/openai.yaml` interface file alongside it.
+Each skill folder holds a `SKILL.md`. Skills exposed as Codex agents may also
+carry an `agents/openai.yaml` interface file.
 
 ## License
 

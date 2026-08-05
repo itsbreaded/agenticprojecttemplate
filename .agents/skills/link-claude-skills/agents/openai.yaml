@@ -1,0 +1,4 @@
+interface:
+  display_name: "Link Claude Skills"
+  short_description: "Share canonical project skills with Claude Code"
+  default_prompt: "Use $link-claude-skills to validate or configure the project skill alias: $ARGUMENTS"

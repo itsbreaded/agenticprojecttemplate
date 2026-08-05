@@ -20,8 +20,8 @@ until it is a sound handoff to `brainstorm-spec`.
 
 ## Discover before drafting
 
-1. Read `specs/TEMPLATE.md`, `docs/writing-specs.md`, and the spec-driven
-   development rules in `AGENTS.md`.
+1. Read `specs/TEMPLATE.md`, `docs/writing-specs.md`, and the planning-spec
+   rules in `AGENTS.md`.
 2. Inspect relevant repository docs, adjacent code, tests, configuration, and
    completed specs. Establish current behavior, naming conventions, affected
    boundaries, likely dependencies, and constraints. Do not treat prior specs

@@ -5,8 +5,9 @@ description: Implement a ready spec with a durable adjacent plan, incremental ch
 
 # execute-spec
 
-Implement a `ready` spec and leave it at `review` for independent
-verification. This is the coding leg of `brainstorm-spec -> execute-spec ->
+Implement a `ready` spec with an independently approved implementation plan
+and leave it at `review` for independent verification. This is the coding leg
+of `brainstorm-spec -> plan-spec -> review-plan -> execute-spec ->
 verify-spec`; it does not archive the spec.
 
 ## Invocation and gate
@@ -17,52 +18,65 @@ specs in `specs/pending/`.
 - Refuse specs in `specs/done/`.
 - Stop on `draft`; send it to `brainstorm-spec`.
 - Stop on `review`; it is awaiting `verify-spec`.
-- Accept `ready` and `in-progress`. Resume an in-progress spec from its
-  adjacent `<slug>.plan.md`; for existing work, also recognize the legacy
-  `specs/plans/<slug>.md` location. Migrate a legacy plan beside its spec when
-  next updating it. If no plan exists, reconstruct a minimal plan from the
-  spec and relevant diff before changing code.
+- Accept `ready` only when its adjacent `<slug>.plan.md` exists and has
+  `Plan Status: approved`. If it is missing, stale, or marked
+  `review`/`changes-requested`, stop and send it to `plan-spec` or
+  `review-plan`.
+- Accept `in-progress` with an adjacent plan marked `approved`,
+  `in-progress`, or `completed`. For existing work, also recognize the
+  legacy `specs/plans/<slug>.md` location and migrate it beside its spec when
+  next updating it; a legacy or unreviewed plan must be reviewed before new
+  implementation changes.
 
 ## Preflight
 
 1. Read the spec, relevant repository guidance, and cited dependencies.
 2. Locate only the docs relevant to the affected subsystem; do not assume
-   generic architecture/data-source documents exist.
-3. Inspect the code paths the spec relies on before planning.
-4. Discover the project's command manifest (e.g. `package.json`,
-   `pyproject.toml`, `Makefile`, `Cargo.toml`, or whatever the project uses)
-   and use only scripts that actually exist. The baseline checks are
-   typecheck, build, and tests; run end-to-end tests when the spec changes
-   user-visible behavior, inter-process or integration boundaries, startup,
-   or external automation.
+   generic architecture or data-source documents exist.
+3. Inspect the code paths the spec relies on to validate the approved plan
+   before implementing.
+4. Discover the project's command manifest (for example `package.json`,
+   `pyproject.toml`, `Makefile`, `Cargo.toml`, or an equivalent) and use only
+   commands that actually exist. Run the available typecheck, build, and test
+   checks; run end-to-end checks when the spec changes user-visible behavior,
+   process boundaries, startup, or external automation.
+5. Confirm that any consequential product, security, privacy, cost,
+   destructive, or external-side-effect choice is explicitly authorized by
+   the user or maintainer; technical plan approval alone is insufficient.
 
-## Create one durable plan
+## Consume one durable plan
 
-Create `specs/pending/<slug>.plan.md` beside the spec. It is the sole required
-resume and audit artifact; use transient task tooling only if it helps the
-current session.
+Use `specs/pending/<slug>.plan.md` beside the spec as the sole required resume
+and audit artifact. Do not create a replacement plan during execution. Use
+transient task tooling only if it helps the current session.
 
-Keep it short. For each right-sized task record:
+Before changing code, read the complete plan and confirm it has:
 
-- status (`pending`, `in_progress`, `completed`);
-- requirement/scenario mapping;
-- likely files or subsystem;
-- one isolated verification method.
+- verified repository facts, architecture/data flow, and explicit sequencing;
+- requirement/scenario coverage for every task;
+- exact files/symbols, current behavior, implementation changes, invariants,
+  edge cases, and isolated verification;
+- risks, non-goals, manual limits, and a handoff checklist.
 
 Every requirement needs a task. A task with no requirement is scope creep;
-split tasks that cover more than three requirements. Update the plan as work
-completes. Set the spec `Status: in-progress` once the plan exists.
+split tasks that cover more than three requirements unless their coupling is
+explicit. Set the plan `Plan Status: in-progress` and the spec
+`Status: in-progress` when implementation starts. Update task status and
+evidence as work completes.
 
 ## Implement
 
 - Work in dependency order and match surrounding conventions.
 - Keep each change tied to a requirement or an essential implementation need.
-- Run focused tests after each coherent change. Run project-wide typecheck
-  after shared type/API changes and at handoff; do not repeat it mechanically
-  after every small task.
+- Run focused tests after each coherent change. Run project-wide checks after
+  shared API changes and at handoff; do not repeat them mechanically after
+  every small task.
 - Respect non-goals and reuse existing services or boundaries where specified.
 - Resolve ordinary technical details autonomously using the least-surprising,
   idiomatic approach.
+- If implementation discovers a scope, requirement, invariant, sequencing, or
+  verification change, stop and return the plan to `plan-spec`/`review-plan`
+  before continuing. Do not silently edit around an approved plan.
 
 If the spec is impossible, contradictory, or requires a genuine product,
 scope, security/privacy, cost, or irreversible decision, stop and report it
@@ -74,12 +88,15 @@ is unavailable or ambiguous.
 
 Before `review`:
 
-1. Run the project's typecheck, build, and full test commands when present.
+1. Run the project's available typecheck, build, and full test commands.
 2. Run end-to-end checks when required by the preflight impact rule; otherwise
-   state why it was not applicable.
-3. Remove debug code and update every plan task.
-4. Add a short `## Implementation Summary` to the plan: requirements covered,
-   checks run, and known manual/runtime limits.
+   state why they were not applicable.
+3. Run the repository's diff/whitespace check when available, remove debug
+   code, and update every plan task with exact evidence and any manual/runtime
+   limitation.
+4. Set the plan `Plan Status: completed` and add a short
+   `## Implementation Summary` to the plan: requirements covered, checks run,
+   and known manual/runtime limits.
 
 On success, set `Status: review` and leave `Completed:` blank. Report the
 implemented requirements, executed evidence, and any risks for verification.

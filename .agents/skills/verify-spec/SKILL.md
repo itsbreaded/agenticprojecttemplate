@@ -6,8 +6,9 @@ description: Independently verify a spec against its requirements and scenarios,
 # verify-spec
 
 Independently decide whether a spec is done. A passing verification is
-archived immediately: `brainstorm-spec -> execute-spec -> verify-spec` ends
-with a complete, mechanically sound, durable record.
+archived immediately:
+`brainstorm-spec -> plan-spec -> review-plan -> execute-spec -> verify-spec`
+ends with a complete, mechanically sound, durable record.
 
 ## Invocation and gate
 
@@ -15,11 +16,11 @@ with a complete, mechanically sound, durable record.
 specs in `specs/pending/`.
 
 - Refuse a spec already under `specs/done/`.
-- Stop on `draft` or `ready`; send it to `execute-spec`.
+- Stop on `draft` or `ready`; send it to the appropriate earlier phase.
 - `review` is the normal handoff.
 - `in-progress` is rescue verification: continue only if its adjacent plan
   shows every requirement task complete. Otherwise report the missing work and
-  leave it in progress. This avoids needless handoffs after an interrupted
+  leave it in progress. This avoids needless handoffs after interrupted
   execution without treating partial work as ready.
 
 ## Preflight and independence
@@ -30,35 +31,39 @@ specs in `specs/pending/`.
    establish the relevant changed files from version control and record the
    limitation.
 2. Read only applicable repository guidance. Discover runnable checks from
-   the project's command manifest (e.g. `package.json`, `pyproject.toml`,
-   `Makefile`, `Cargo.toml`, or whatever the project uses); never assume
-   scripts exist.
+   the project's command manifest; never assume scripts exist.
 3. If this session also implemented the spec, obtain an independent blind
    requirements/scenario pass using available delegation, or explicitly state
    that independence is unavailable before proceeding. Do not provide the
    verifier with implementation rationale; give it only the spec and plan.
 4. Treat dependency status as advisory. Confirm each behavior the spec relies
    on in code; fail only if it is unavailable or ambiguous.
+5. Confirm the plan contains a truthful implementation summary and, when
+   applicable, a recorded plan-review verdict. An old narrative note or a
+   green broad test command is not a substitute for current evidence.
 
 ## Build and run the verification matrix
 
 For every requirement, acceptance scenario, non-goal, consequential resolved
 decision, and dependency, record one of `PASS`, `FAIL`, or `UNVERIFIED` and
 the concrete evidence: test name, command result, or reproducible manual/code
-path check. Try to falsify each item before accepting it.
+path check. Evidence must match the claim: source inspection can support a
+wiring or invariant claim, but behavior that affects users requires a
+behavioral test or a documented runtime/manual observation. Try to falsify
+each item before accepting it.
 
 An unresolved `Open Questions` entry is a failure. A missing demonstration
 for a requirement or scenario is `UNVERIFIED`, not a pass. Confirm non-goals
 were not quietly implemented.
 
-Run these checks when present:
+Run the available checks when present:
 
 - the project's typecheck command;
 - the project's build command;
 - the full test suite;
 - end-to-end checks when the changed surface includes user-visible behavior,
-  inter-process or integration boundaries, startup, or external automation;
-  otherwise record why it was not applicable.
+  process boundaries, startup, or external automation; otherwise record why
+  they were not applicable.
 
 Also inspect the change for debug code, commented-out dead code, and TODOs
 that pretend to satisfy a requirement.
@@ -92,7 +97,7 @@ Append a compact `## Verification Evidence` section to the adjacent plan:
 
 ### PASS: archive
 
-Only when every matrix item passes and mechanical checks are green:
+Only when every matrix item passes and applicable checks are green:
 
 1. Change the spec to `Status: done` and set `Completed:` to today's date.
 2. Move the spec and its adjacent `<slug>.plan.md` from `specs/pending/` to
@@ -110,6 +115,8 @@ the exact blocking decision or missing behavior.
 
 - Evidence, not opinion: no requirement passes merely because the code looks
   plausible.
+- Do not mark a behavior `PASS` because a plan, review note, or test exists;
+  verify the observed outcome and record the exact evidence.
 - Do not edit requirements, scenarios, non-goals, or decisions to make a spec
   pass. Amend those through `brainstorm-spec`.
 - Archive whole specs only. A partial archive is a failure, not a shortcut.

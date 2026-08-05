@@ -10,108 +10,95 @@
 > Repo status: greenfield / being initialized. Update this section as the
 > stack, entry points, and conventions solidify.
 
+## Shared Agent Skills
+
+Project skill contents live only in `.agents/skills/`. If Claude Code is used,
+`.claude/skills/` is a local, uncommitted junction or symlink to that canonical
+directory. Read and edit skills through `.agents/skills/<skill>/SKILL.md`; do
+not create copies through the alias.
+
+## How to document a change
+
+Keep this file and `docs/` as a two-layer split:
+
+- `AGENTS.md` holds concise rules a future agent must respect at decision time.
+- `docs/<subsystem>.md` holds mechanism, rationale, failure modes, and other
+  details needed only when touching that subsystem.
+- A guardrail group ends with a link to its focused doc, and that doc names
+  which `AGENTS.md` guardrails it expands. Every docs-index entry must point
+  to a real file.
+- Prefer a one-line rule over a doc when the lesson is self-contained. Do not
+  duplicate code comments, git history, or unrelated subsystem narratives.
+
+`## Planning Specs` is the exception: specs and their adjacent plans live in
+`specs/`, not `docs/`.
+
+## Planning Specs
+
+Use `specs/pending/` for planned work that needs design before implementation.
+Name spec files with the next unused three-digit global sequence and a
+kebab-case title, checking both `specs/pending/` and `specs/done/`. Preserve
+the number when moving a spec to `specs/done/`.
+
+Specs contain WHAT/WHY: the problem, intended behavior, requirements,
+scenarios, non-goals, and consequential decisions. The adjacent
+`<slug>.plan.md` contains the repository-specific HOW: architecture, files,
+symbols, sequencing, tasks, risks, and verification. Keep both artifacts
+practical and remove stale work.
+
+The lifecycle is:
+
+```text
+draft-spec -> brainstorm-spec -> plan-spec -> review-plan -> execute-spec -> verify-spec
+```
+
+`brainstorm-spec` makes the behavioral contract ready. `plan-spec` creates a
+plan with `Plan Status: review`; `review-plan` independently approves it or
+requests changes. `execute-spec` requires `Plan Status: approved` and must not
+invent a minimal plan to bypass that gate. `verify-spec` records evidence and
+archives only a passing spec and its plan.
+
+### Agent workflow guardrails
+
+- Plan approval is a technical readiness gate, not authorization for an
+  unapproved product, security, privacy, cost, destructive, or external-side-
+  effect decision.
+- Record requirements, scenarios, non-goals, decisions, reviewer feedback,
+  implementation evidence, and verification evidence in the spec or adjacent
+  plan; do not make chat the only record.
+- Never claim a check, review, runtime observation, or user approval that did
+  not occur. Treat missing behavioral evidence as `UNVERIFIED`.
+- Archive only after every applicable requirement and scenario has passing
+  evidence and the spec/plan are moved together to `specs/done/`.
+
+See [`docs/writing-specs.md`](docs/writing-specs.md) and
+[`docs/writing-plans.md`](docs/writing-plans.md) for the detailed contracts.
+
 ## Docs index
 
-`docs/` holds detailed, on-demand technical documentation — AI model
-specifics, deeper architecture, integration details, runbooks. **These
-files are not frontloaded into context.** Read a doc only when the current
-task depends on it; do not read them preemptively.
+`docs/` contains on-demand technical documentation. Read only the docs needed
+for the current task; keep this index accurate when files are added, removed,
+or materially changed.
 
-When you add, remove, or materially change a doc, keep this index up to
-date so it stays an accurate map of `docs/`. Each entry is one line:
-`path` — what it covers / when to read it.
-
-<!-- Add entries below as docs are created. Example:
-- `docs/models/sonnet-notes.md` — Sonnet quirks, limits, pricing; read before tuning model selection or prompts.
-- `docs/architecture/data-model.md` — DB schema and entity relationships; read before touching persistence.
--->
-
-- `docs/README.md` — how the `docs/` folder is organized and when to read these files.
-- `docs/writing-specs.md` — detailed spec-writing principles; read when drafting or reviewing a spec.
+- [`docs/README.md`](docs/README.md) — organization and read-on-demand policy.
+- [`docs/writing-specs.md`](docs/writing-specs.md) — spec principles,
+  scenarios, definition of done, and lifecycle.
+- [`docs/writing-plans.md`](docs/writing-plans.md) — implementation-plan
+  structure, review gate, task quality, and evidence loop.
 
 ## Quick start
 
 <!-- TODO: fill in once the stack is chosen. -->
 <!-- Examples:
 - Language/runtime: ...
-- Install: `npm install` / `pip install -r requirements.txt`
-- Run dev: `npm run dev`
-- Run tests: `npm test`
-- Lint/format: `npm run lint`
+- Install: `<install command>`
+- Run dev: `<development command>`
+- Run tests: `<test command>`
+- Lint/format: `<lint or format command>`
 -->
 
-## Spec-driven development (how we build features here)
+## Project guardrails
 
-This repo follows **spec-driven development**. A feature is not "done"
-because the code looks right — it is done when the agreed spec is met.
-
-### Workflow
-
-```
-spec (WHAT/WHY)  →  plan (HOW)  →  implement  →  verify against spec  →  ship
-```
-
-The skills in `.agents/skills/` automate these steps:
-`draft-spec` → `brainstorm-spec` → `execute-spec` → `verify-spec`.
-The `auto-orchestrator-spec` skill composes the phase skills for unattended
-queue processing, with bounded retries and an ignored resume checkpoint.
-
-1. **Write the spec first.** Before any code, capture the problem, goals,
-   requirements, and acceptance criteria. No spec = no code.
-2. **Review the spec.** A spec is cheap to change; code is expensive. Get
-   the WHAT and WHY right before writing HOW.
-3. **Plan, then implement.** Once the spec is approved, design the
-   implementation against it. Implementation details (files, functions,
-   libraries) live in the plan/PR, not the spec.
-4. **Verify against the spec.** Implementation is complete only when every
-   requirement and acceptance scenario is demonstrably met.
-5. **Archive.** Move the spec from `pending/` to `done/` once shipped.
-
-For long-running unattended work, use `/auto-orchestrator-spec`. It keeps
-working through the pending queue until all specs are archived or a declared
-stopping point or safety limit is reached. Its checkpoint at
-`specs/.auto-orchestrator-state.md` is only a resume hint; each spec's
-`Status:` line remains authoritative.
-
-### Spec folders
-
-- `specs/pending/` — specs not yet shipped (draft, ready, in-progress, review).
-- `specs/done/` — shipped specs, moved here on completion.
-- `specs/TEMPLATE.md` — copy this to start a new spec.
-
-Each spec is one Markdown file, named with the next unused three-digit global
-sequence and a kebab-case slug, e.g. `053-add-user-login.md`. Check both
-`specs/pending/` and `specs/done/` before choosing the number, and preserve it
-when archiving. The slug is the stable identity: **cross-references between
-specs, plans, and PRs use the slug, never the number**.
-Creation date is recorded inside the file (`Created:` field), not in the
-filename.
-
-### Lifecycle of a spec
-
-- **draft** — being written; requirements still in flux.
-- **ready** — requirements and acceptance criteria are complete and agreed;
-  implementation can begin.
-- **in-progress** — being implemented.
-- **review** — implementation complete, being verified against the spec.
-- **done** — shipped; the file is moved to `specs/done/`.
-
-When a spec moves to `done`, add a `Completed:` date at the top and move
-the file from `specs/pending/` to `specs/done/`. Keep its filename stable
-so it's easy to reference later.
-
-### Writing good specs
-
-Detailed spec-writing guidance (behavior over implementation, verifiable
-requirements, explicit Non-Goals, Given/When/Then scenarios, capturing the
-why) lives in **`docs/writing-specs.md`** — read it when drafting or
-reviewing a spec. Start from `specs/TEMPLATE.md`.
-
-### Definition of done
-
-A spec is `done` only when ALL of these are true:
-
-- Every requirement is met and demonstrable.
-- Every acceptance scenario passes (ideally as an automated test).
-- No Open Questions remain unresolved.
-- The spec file is moved to `specs/done/` with a `Completed:` date.
+<!-- TODO: Add terse, project-specific non-negotiables here as the project
+     gains architecture and subsystem knowledge. Link mechanism docs from
+     each guardrail group instead of narrating them in this file. -->

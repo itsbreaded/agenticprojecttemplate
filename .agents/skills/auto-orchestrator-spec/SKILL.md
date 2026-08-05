@@ -1,21 +1,24 @@
 ---
 name: auto-orchestrator-spec
-description: Autonomously drive pending specs through brainstorm-spec, execute-spec, and verify-spec in a loop until all are done or a stated stopping point is reached, delegating any user-decision moments to a blind subagent. Use for /auto-orchestrator-spec.
+description: Autonomously drive pending specs through brainstorm-spec, plan-spec, review-plan, execute-spec, and verify-spec in a loop until all are done or a stated stopping point is reached, delegating any user-decision moments to a blind subagent. Use for /auto-orchestrator-spec.
 ---
 
 # auto-orchestrator-spec
 
 Run the project's spec pipeline unattended. For each pending spec, drive
-`brainstorm-spec -> execute-spec -> verify-spec` to completion, then advance
-to the next, until every pending spec is archived to `specs/done/` or a
-stopping point declared at invocation is reached. Never hand a question back
-to the user; resolve decision moments with a blind subagent.
+`brainstorm-spec -> plan-spec -> review-plan -> execute-spec -> verify-spec`
+to completion, then advance to the next, until every pending spec is archived
+to `specs/done/` or a stopping point declared at invocation is reached. Never
+hand a question back to the user; resolve decision moments with a blind
+subagent.
 
-This skill orchestrates the three existing phase skills; it does not redefine
+This skill orchestrates the five existing phase skills; it does not redefine
 their behavior. Their gates are the contract:
 
 - `brainstorm-spec`: `draft`/`in-progress` -> `ready`
-- `execute-spec`: `ready`/`in-progress` -> `review`
+- `plan-spec`: `ready` -> adjacent plan with `Plan Status: review`
+- `review-plan`: plan `review` -> `approved` or `changes-requested`
+- `execute-spec`: `ready`/`in-progress` with an approved plan -> `review`
 - `verify-spec`: `review`/`in-progress` -> archive to `done`
 
 ## Invocation and scope
@@ -30,7 +33,7 @@ their behavior. Their gates are the contract:
   - `until-blocked` — stop at the first spec that cannot be completed
     autonomously;
   - `max N` — stop after N specs are archived;
-  - `only <slug>` — process exactly one spec, still through all three phases.
+  - `only <slug>` — process exactly one spec, still through all five phases.
 - Do not infer a stopping point from silence. The default is "all pending."
 
 ## Execution continuity (mandatory)
@@ -63,7 +66,7 @@ call, phase transition, test result, checkpoint update, or archived spec.
 Unbounded feedback paths are the root cause of infinite agentic loops, so
 the orchestrator carries its own budgets, independent of phase budgets:
 
-- **Per-spec attempt cap**: at most 5 full passes through the three phases
+- **Per-spec attempt cap**: at most 5 full passes through the five phases
   per spec. Still not archived after that -> stop on that spec, report.
 - **Per-phase retry cap**: if a phase exits three times in a row without
   advancing status for the same blocker, do not retry it a fourth time -> stop, report.
@@ -139,17 +142,25 @@ its spec as a stopping point.
       unresolved `Open Questions`). Drive to `ready`. Use the blind subagent
       for any "ask the user" moment. If it cannot reach `ready` within the
       per-phase retry cap, stop and report.
-   2. **execute-spec** if status is `ready` or `in-progress`. Resume from the
-      adjacent `specs/pending/<slug>.plan.md` if present. Drive to `review`.
-      Use the blind subagent for any decision the phase would ask the user.
-      On a genuine product/scope/irreversible blocker, stop and report.
-   3. **verify-spec** if status is `review` (or `in-progress` rescue per
+   2. **plan-spec** if status is `ready`, or if an `in-progress` spec is being
+      recovered with a missing or `changes-requested` plan, or if the plan
+      needs substantive revision. Drive the plan to `Plan Status: review`.
+      Do not begin implementation.
+   3. **review-plan** when the plan has `Plan Status: review`. Obtain the blind
+      review and drive it to `approved` or stop on `changes-requested` until
+      `plan-spec` repairs it.
+   4. **execute-spec** if status is `ready` or `in-progress` and the adjacent
+      plan is approved or already in execution. Resume from the adjacent
+      plan and drive the spec to `review`. Use the blind subagent for any
+      decision the phase would ask the user. On a genuine product/scope/
+      irreversible blocker, stop and report.
+   5. **verify-spec** if status is `review` (or `in-progress` rescue per
       verify-spec's own rule). Because this session also executed, obtain an
       **independent** pass: spawn a blind verifier subagent given only the
       spec and the plan, ask for the PASS/FAIL/UNVERIFIED matrix, and use its
       result. Give the verifier no implementation rationale. Archive on PASS
       per verify-spec's rules.
-   4. After archive, update the checkpoint and advance.
+   6. After archive, update the checkpoint and advance.
 5. **Advance or stop.** After each spec: if the stopping point is reached,
    stop. If the spec failed to advance within its caps, stop and report — do
    not silently skip to the next. If it advanced, continue. When all specs
